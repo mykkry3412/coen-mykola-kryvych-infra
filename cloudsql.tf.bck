@@ -1,0 +1,96 @@
+# locals {
+#     env		     = "dev"
+#     db_version       = "MYSQL_8_0"
+#     db_name          = "wordpress-db"
+#     db_tier          = "db-g1-small"
+#     region           = "europe-west3"
+#     zone             = "europe-west3-a"
+#     project          = "coen-mykola-kryvych"
+#     vpc              = "wordpress-vpc"
+#     av_type	     = "ZONAL"
+#     bkp_ena	     = "true" 
+#     bkp_ret	     = "6"
+#     bkp_loc	     = "eu"
+#     bkp_start	     = "0:00"
+#     disk_autoresz    = "false"
+#     disk_size        = "30"
+#     disk_type        = "PD_HDD"
+#     maint_day	     = "6"
+#     maint_hour	     = "0"
+#     secret_data = jsondecode(data.google_secret_manager_secret_version.user_password.secret_data)
+# }
+
+# data "google_secret_manager_secret_version" "user_password" {
+#   secret = "sql-db-test-password"
+# }
+
+# resource "google_sql_database_instance" "wordpress-db" {
+#   database_version   = local.db_version
+#   name               = local.db_name
+
+#   settings {
+#     activation_policy = "ALWAYS"
+#     availability_type = local.av_type
+
+#     backup_configuration {
+#       backup_retention_settings {
+#         retained_backups = local.bkp_ret
+#         retention_unit   = "COUNT"
+#       }
+
+#       enabled                        = local.bkp_ena
+#       location                       = local.bkp_loc
+#       start_time                     = local.bkp_start
+#       transaction_log_retention_days = 7
+#     }
+
+#     disk_autoresize       = local.disk_autoresz
+#     disk_autoresize_limit = 0
+#     disk_size             = local.disk_size
+#     disk_type             = local.disk_type
+
+#     insights_config {
+#       query_insights_enabled = true
+#       query_string_length    = 1024
+#     }
+
+#     ip_configuration {
+#       ipv4_enabled                                  = false
+#       private_network                               = google_compute_network.wordpress-vpc.id
+#       enable_private_path_for_google_cloud_services = true
+#     }
+
+#     maintenance_window {
+#       day  = 1
+#       hour = 0
+#     }
+
+#     location_preference {
+#       zone = local.zone
+#     }
+
+#     pricing_plan = "PER_USE"
+#     tier         = local.db_tier
+
+#     user_labels = {
+#       env = local.env 
+#     }
+# }
+
+# depends_on = [google_service_networking_connection.wordpress-vpc]
+
+# }
+
+
+# resource "google_sql_database" "database" {
+#   name     = "wordpress"
+#   instance = google_sql_database_instance.wordpress-db.name
+# }
+
+# resource "google_sql_user" "sql_user" {
+#   instance = google_sql_database_instance.wordpress-db.name
+#   name     = local.secret_data.dbuser
+#   project  = local.project
+#   password = local.secret_data.dbpassword
+# }
+
